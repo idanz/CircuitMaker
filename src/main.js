@@ -37,6 +37,7 @@ function saveDraft(language) {
   persistWorkspace();
 }
 let activeFile;
+let renamingFile = null;
 let workspaceFiles = [];
 let cookbookFiles = [];
 let cookbookLanguage = 'python';
@@ -74,7 +75,8 @@ function showFile(file, { replaceUrl = false } = {}) {
   const hint = filebar.querySelector('.file-hint');
   filebar.insertBefore($('#cookbook-language-picker'), hint);
   filebar.insertBefore($('#copy-example'), hint);
-  filebar.append($('#delete-file'), $('#download-workspace'));
+  filebar.append($('#rename-file'), $('#delete-file'), $('#download-workspace'));
+  $('#rename-file').hidden = !!file.readonly;
   $('#delete-file').hidden = !!file.readonly;
   let state = fileStates.get(file);
   if (!state) {
@@ -145,7 +147,52 @@ function renderFiles() {
   if (!groups.size) cookbook.textContent = 'No matching examples.';
 }
 function createFile() {
-  $('#new-file-dialog').showModal(); $('#new-file-name').focus();
+  openFileDialog();
+}
+function openFileDialog(file = null) {
+  renamingFile = file;
+  const language = file?.language ?? activeFile?.language ?? 'python';
+  const extension = language === 'python' ? '.py' : '.ts';
+  $('#new-file-language').value = language;
+  $('#new-file-language').disabled = !!file;
+  $('#new-file-title').textContent = file ? 'Rename file' : 'New circuit file';
+  $('#save-file').textContent = file ? 'Save name' : 'Create file';
+  $('#new-file-extension').textContent = extension;
+  const input = $('#new-file-name');
+  input.value = (file?.name ?? availableUploadName(`my_circuit${extension}`, workspaceFiles)).slice(0, -3);
+  input.setCustomValidity('');
+  $('#new-file-dialog').showModal();
+  input.focus(); input.select();
+}
+function submitFileDialog(event) {
+  event.preventDefault();
+  const input = $('#new-file-name');
+  const extension = $('#new-file-language').value === 'python' ? '.py' : '.ts';
+  const stem = input.value.trim().replace(/\.(py|ts)$/i, '');
+  const name = stem + extension;
+  const error = !/^[\w .-]+$/.test(stem) ? 'Use letters, numbers, spaces, dots, hyphens or underscores.'
+    : workspaceFiles.some(file => file !== renamingFile && file.name.toLowerCase() === name.toLowerCase()) ? 'That filename already exists.' : '';
+  input.setCustomValidity(error);
+  if (error) { input.reportValidity(); return; }
+  if (renamingFile) {
+    const file = renamingFile;
+    if (file.name !== name) {
+      const state = fileStates.get(file), lane = lanes[file.language];
+      const viewState = lane.editor.saveViewState();
+      const model = monaco.editor.createModel(state.model.getValue(), file.language, monaco.Uri.parse(`file:///workspace/${encodeURIComponent(name)}`));
+      const previous = state.model;
+      state.model = model;
+      lane.switching = true; lane.editor.setModel(model); lane.switching = false;
+      if (viewState) lane.editor.restoreViewState(viewState);
+      previous.dispose();
+      file.name = name; file.code = model.getValue();
+      persistWorkspace();
+      history.replaceState(null, '', fileSelectionHash(file));
+      $(`#${file.language}-filename`).textContent = name;
+      renderFiles();
+    }
+  } else if (!addFile(name, extension === '.py' ? simulationPython : simulationTypeScript)) return;
+  $('#new-file-dialog').close();
 }
 function addFile(name, code) {
   if (!/^[\w .-]+\.(py|ts)$/.test(name)) { notify('Use a filename ending in .py or .ts.'); return false; }
@@ -420,6 +467,7 @@ async function main() {
     const link=document.createElement('a');link.href=url;link.download='circuitmaker-workspace.zip';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   };
   $('#new-file').onclick = createFile;
+  $('#rename-file').onclick = () => { if (activeFile && !activeFile.readonly) openFileDialog(activeFile); };
   $('#upload-file').onclick = () => $('#upload-file-input').click();
   $('#upload-file-input').onchange = async event => {
     const selected = Array.from(event.target.files);
@@ -449,7 +497,15 @@ async function main() {
     }
   };
   $('#cancel-file').onclick = () => $('#new-file-dialog').close();
-  $('#new-file-form').onsubmit = event => { event.preventDefault(); const name=$('#new-file-name').value.trim(); const code=name.toLowerCase().endsWith('.ts')?simulationTypeScript:simulationPython; if (addFile(name,code)) $('#new-file-dialog').close(); };
+  $('#new-file-name').oninput = () => $('#new-file-name').setCustomValidity('');
+  $('#new-file-language').onchange = () => {
+    const extension = $('#new-file-language').value === 'python' ? '.py' : '.ts';
+    $('#new-file-extension').textContent = extension;
+    const input = $('#new-file-name');
+    input.setCustomValidity('');
+    if (/^my_circuit(?:-\d+)?$/.test(input.value)) input.value = availableUploadName(`my_circuit${extension}`, workspaceFiles).slice(0, -3);
+  };
+  $('#new-file-form').onsubmit = submitFileDialog;
   const catalogResponse = await fetch('/signals/catalog.json');
   if (catalogResponse.ok) {
     const catalog = await catalogResponse.json();
