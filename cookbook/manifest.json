@@ -1,0 +1,157 @@
+[
+  {
+    "id": "01-everything",
+    "title": "Everything wildcard",
+    "section": "Virtual_signals"
+  },
+  {
+    "id": "02-anything",
+    "title": "Anything wildcard",
+    "section": "Virtual_signals"
+  },
+  {
+    "id": "03-each-filter",
+    "title": "Each filter",
+    "section": "Virtual_signals"
+  },
+  {
+    "id": "04-each-count",
+    "title": "Each input-only count",
+    "section": "Virtual_signals"
+  },
+  {
+    "id": "05-each-sum",
+    "title": "Each input-only sum",
+    "section": "Virtual_signals"
+  },
+  {
+    "id": "06-arithmetic-map",
+    "title": "Arithmetic Each map",
+    "section": "Virtual_signals"
+  },
+  {
+    "id": "07-arithmetic-sum",
+    "title": "Arithmetic Each reduction",
+    "section": "Virtual_signals"
+  },
+  {
+    "id": "08-insulator",
+    "title": "Input insulator",
+    "section": "Input_insulator_&_gate"
+  },
+  {
+    "id": "09-gate",
+    "title": "Conditional bus gate",
+    "section": "Input_insulator_&_gate"
+  },
+  {
+    "id": "10-sr-bias",
+    "title": "Biased SR switch",
+    "section": "Set/Reset_latching_switch"
+  },
+  {
+    "id": "11-oil-pump",
+    "title": "Light oil pump hysteresis",
+    "section": "Set/Reset_latching_switch"
+  },
+  {
+    "id": "12-positive-memory",
+    "title": "Positive feedback memory",
+    "section": "Basic_memory"
+  },
+  {
+    "id": "13-signed-memory",
+    "title": "Signed feedback memory",
+    "section": "Basic_memory"
+  },
+  {
+    "id": "14-runaway-memory",
+    "title": "Constant-driven memory",
+    "section": "Basic_memory"
+  },
+  {
+    "id": "15-belt-counter",
+    "title": "Belt pulse counter",
+    "section": "Basic_memory"
+  },
+  {
+    "id": "16-arithmetic-clock",
+    "title": "Runaway arithmetic clock",
+    "section": "Basic_clocks"
+  },
+  {
+    "id": "17-clock",
+    "title": "Thirty tick clock",
+    "section": "Basic_clocks"
+  },
+  {
+    "id": "18-single-clock",
+    "title": "Single combinator clock",
+    "section": "Basic_clocks"
+  },
+  {
+    "id": "19-once-clock",
+    "title": "One-time clock",
+    "section": "Basic_clocks"
+  },
+  {
+    "id": "20-pulse",
+    "title": "Periodic pulse generator",
+    "section": "Pulse_generators"
+  },
+  {
+    "id": "21-edge",
+    "title": "Signed edge detector",
+    "section": "Edge_detectors"
+  },
+  {
+    "id": "22-rising-edge",
+    "title": "Rising edge detector",
+    "section": "Edge_detectors"
+  },
+  {
+    "id": "23-event-counter",
+    "title": "Pulse event counter",
+    "section": "Counter"
+  },
+  {
+    "id": "24-simple-latch",
+    "title": "Simple latch from the truth table",
+    "section": "Memory_cells"
+  },
+  {
+    "id": "25-positive-cell",
+    "title": "Positive value cell",
+    "section": "Memory_cells"
+  },
+  {
+    "id": "26-signed-cell",
+    "title": "Signed value cell",
+    "section": "Memory_cells"
+  },
+  {
+    "id": "27-scalar-product",
+    "title": "Scalar multiplication",
+    "section": "Multiplier_and_Dictionaries/Arrays"
+  },
+  {
+    "id": "28-vector-product",
+    "title": "Per-signal vector multiplication",
+    "section": "Multiplier_and_Dictionaries/Arrays"
+  },
+  {
+    "id": "29-dictionary",
+    "title": "Dictionary lookup",
+    "section": "Multiplier_and_Dictionaries/Arrays"
+  },
+  {
+    "id": "30-array",
+    "title": "Indexed array lookup",
+    "section": "Multiplier_and_Dictionaries/Arrays"
+  },
+  {
+    "id": "31-anything-output",
+    "title": "Anything output selector",
+    "section": "Virtual_signals"
+  }
+]

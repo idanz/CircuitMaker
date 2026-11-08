@@ -1,0 +1,29 @@
+"""Each input-only sum
+
+Input: mixed signals. Output: A is the sum of positive input counts after one tick. Changing the output from Each to A combines the per-channel results into one total.
+
+Simulation (26 ticks): The bus starts positive, changes to mixed positive/negative counts at tick 8, and clears at tick 16. Inspect the output one tick after each change.
+Run builds a blueprint and calculates the Simulation timeline. Each combinator takes one tick. Drivers are simulation-only and are omitted from blueprints.
+Source topic: https://wiki.factorio.com/Tutorial:Combinator_tutorial#Virtual_signals
+Original CircuitMaker implementation and explanation; parameters are editable in a copy."""
+from circuit import Decider, Simulation, Driver, wire
+from catalog import Virtual
+
+test = Decider(
+    name="Sum positive counts",
+    when=Virtual.each.greater_than(0),
+    outputs=[Virtual.A.copy_input()],
+)
+
+inputs = Driver("inputs")
+inputs.at(0, [Virtual.A.output(4), Virtual.B.output(2)], reset_others=True)
+inputs.at(8, [Virtual.A.output(-3), Virtual.B.output(2)], reset_others=True)
+inputs.at(16, [], reset_others=True)
+
+wire(inputs, test)
+
+scenario = Simulation([test, inputs], ticks=26, name="Each input-only sum")
+
+# Run checks these signal expectations automatically.
+scenario.expect(1, test, [Virtual.A.output(6)])
+scenario.expect(9, test, [Virtual.A.output(2)])

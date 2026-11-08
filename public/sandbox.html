@@ -1,0 +1,37 @@
+<!doctype html>
+<meta charset="utf-8">
+<!-- The runner is always embedded with sandbox="allow-scripts". Opaque-origin
+     blob workers inherit this policy. All runtime bytes arrive over a port. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' blob:; worker-src blob:; connect-src 'none'; img-src 'none'; style-src 'none'; form-action 'none'; base-uri 'none'">
+<script>
+'use strict';
+addEventListener('message', function initialize(event) {
+  if (event.source !== parent || event.data !== 'circuitmaker-connect' || !event.ports[0]) return;
+  removeEventListener('message', initialize);
+  const port = event.ports[0];
+  let worker = null;
+  let workerURL = null;
+  const dispose = () => {
+    if (worker) worker.terminate();
+    if (workerURL) URL.revokeObjectURL(workerURL);
+    worker = null; workerURL = null;
+  };
+  port.onmessage = ({ data }) => {
+    if (data.type === 'stop') { dispose(); port.postMessage({ type: 'stopped' }); return; }
+    if (data.type === 'boot') {
+      dispose();
+      try {
+        workerURL = URL.createObjectURL(new Blob([data.workerSource], { type: 'text/javascript' }));
+        // These are self-contained IIFE bundles. Chromium cannot start a module
+        // worker from a blob in this opaque-origin frame; classic workers work
+        // with the same sandbox and inherited network-denying CSP.
+        worker = new Worker(workerURL);
+        worker.onmessage = ({ data: result }) => port.postMessage(result);
+        worker.onerror = event => port.postMessage({ type: 'error', message: event.message || 'Runner failed to start' });
+        worker.postMessage({ type: 'init', assets: data.assets });
+      } catch (error) { port.postMessage({ type: 'error', message: String(error) }); }
+    } else if (data.type === 'run' && worker) worker.postMessage(data);
+  };
+  port.postMessage({ type: 'connected' });
+});
+</script>

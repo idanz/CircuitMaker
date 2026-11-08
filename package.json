@@ -1,0 +1,25 @@
+{
+  "name": "circuitmaker-language-lab",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@10.11.0",
+  "scripts": {
+    "prepare:assets": "node scripts/prepare-assets.mjs",
+    "dev": "node scripts/prepare-assets.mjs && vite --host 127.0.0.1",
+    "preview": "node scripts/serve.mjs",
+    "build": "node scripts/prepare-assets.mjs && vite build",
+    "test": "node --experimental-vm-modules --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@astral-sh/ruff-wasm-web": "0.17.3",
+    "fflate": "0.8.3",
+    "monaco-editor": "0.52.2",
+    "monaco-pyright-lsp": "0.1.7",
+    "pyodide": "314.0.7",
+    "typescript": "5.6.3"
+  },
+  "devDependencies": {
+    "vite": "8.3.5"
+  }
+}
