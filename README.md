@@ -26,6 +26,10 @@ Open **http://127.0.0.1:4173**, choose a cookbook example, and press **Copy to m
 
 ## Documentation
 
+The [Python API documentation](https://idanz.github.io/CircuitMaker/) includes
+a quickstart, searchable reference, and signal catalog. See
+[building and publishing the docs](docs/documentation.md) for local setup.
+
 | Guide | Covers |
 | --- | --- |
 | [User guide](docs/user-guide.md) | Create circuits, use the editor, simulate, export, and back up files |

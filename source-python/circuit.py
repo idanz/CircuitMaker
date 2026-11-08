@@ -166,7 +166,7 @@ class Condition:
 
 @dataclass(frozen=True)
 class Expression:
-    """OR groups of AND conditions. Combine with all_of()/any_of() or & / |."""
+    """OR groups of AND conditions. Combine with all_of()/any_of() or ``&`` / ``|``."""
 
     groups: tuple[tuple[Condition, ...], ...]
 
