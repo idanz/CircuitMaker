@@ -2,6 +2,8 @@
 
 Write Factorio combinator circuits in **Python or TypeScript**, inspect their wiring and signals, and export blueprint strings from your browser.
 
+[Open CircuitMaker](https://circuitmaker-language-lab-idan.idanzalz.chatgpt.site) · [Python API documentation](https://idanz.github.io/CircuitMaker/)
+
 ## Features
 
 - Code editor with typed signal catalogs, autocomplete, diagnostics, and formatting.
@@ -47,4 +49,4 @@ Files save in the current browser. Download your source files to back them up or
 
 An unofficial Factorio fan tool. Factorio and its game graphics belong to Wube Software. Cookbook topics reference the [Factorio combinator tutorial](https://wiki.factorio.com/Tutorial:Combinator_tutorial).
 
-No license has been selected for the project code. Dependencies and bundled game assets retain their respective terms.
+The project code is licensed under the [MIT License](LICENSE). Dependencies and bundled game assets retain their respective terms.
