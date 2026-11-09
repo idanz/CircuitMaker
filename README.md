@@ -2,7 +2,7 @@
 
 Write Factorio combinator circuits in **Python or TypeScript**, inspect their wiring and signals, and export blueprint strings from your browser.
 
-[Open CircuitMaker](https://circuitmaker-language-lab-idan.idanzalz.chatgpt.site) · [Python API documentation](https://idanz.github.io/CircuitMaker/)
+[Open CircuitMaker](https://circuitmaker.idanzalz.chatgpt.site) · [Python API documentation](https://idanz.github.io/CircuitMaker/)
 
 ## Features
 
