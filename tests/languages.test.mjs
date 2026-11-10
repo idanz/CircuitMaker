@@ -46,7 +46,9 @@ test('TypeScript examples, catalog, helper-return completion, and type errors', 
 });
 
 test('actual Pyright browser bundle resolves catalog, helper returns and type errors', { timeout: 90_000 }, async () => {
-  const harness = makeWorker(path.join(root, 'public/vendor/pyright/worker.js'));
+  // Catch the browser address-space failure from ZenFS's former 4 GiB
+  // resizable buffers while exercising real completion and type checking.
+  const harness = makeWorker(path.join(root, 'public/vendor/pyright/worker.js'), {}, { maxResizableBytes: 64 * 1024 * 1024 });
   let id = 0, version = 1;
   const uri = 'file:///user.py';
   const notify = (method, params) => harness.post({ jsonrpc: '2.0', method, params });

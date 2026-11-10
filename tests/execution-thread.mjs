@@ -10,6 +10,12 @@ class TestURL extends URL {
   static revokeObjectURL(id) { blobs.delete(id); }
 }
 const listeners = new Set();
+const BoundedArrayBuffer = new Proxy(ArrayBuffer, {
+  construct(target, args) {
+    if (args[1]?.maxByteLength > workerData.maxResizableBytes) throw new RangeError('Analyzer requested an oversized resizable buffer');
+    return Reflect.construct(target, args);
+  },
+});
 const globals = {
   console: { ...console, log() {}, info() {}, debug() {}, warn() {} },
   performance, URL: TestURL, Blob, Response, Request, Headers, TextEncoder, TextDecoder,
@@ -32,6 +38,7 @@ const globals = {
   importScripts() { throw new Error('Unexpected classic worker import'); },
 };
 globals.self = globals;
+if (workerData.maxResizableBytes) globals.ArrayBuffer = BoundedArrayBuffer;
 const context = vm.createContext(globals);
 const moduleCache = new Map();
 async function importModuleDynamically(specifier) {

@@ -43,7 +43,13 @@ async function initialize(assets) {
     pyodide.registerJsModule('_circuitmaker_simulation', { run: plan => JSON.stringify(simulateScenario(JSON.parse(plan))) });
     pyodide.runPython('import circuit, catalog, circuit_web; circuit_web.install()');
     postMessage({ type: 'ready' });
-  } finally { URL.revokeObjectURL(loaderURL); URL.revokeObjectURL(asmURL); }
+  } finally {
+    URL.revokeObjectURL(loaderURL); URL.revokeObjectURL(asmURL);
+    // Startup bytes are already in WASM/the virtual filesystem. Do not keep
+    // another copy alive through the fetch closure for the runtime's lifetime.
+    for (const name of Object.keys(assets.runtime)) delete assets.runtime[name];
+    for (const name of Object.keys(assets)) if (name !== 'runtime') delete assets[name];
+  }
 }
 
 function run(code) {

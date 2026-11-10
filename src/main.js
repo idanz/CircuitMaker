@@ -65,6 +65,7 @@ function showFile(file, { replaceUrl = false } = {}) {
   for (const language of languages) {
     const lane = lanes[language];
     if (lane.busy) lane.runner.stop('File changed. Build cancelled.');
+    else if (language !== file.language && (lane.runner.ready || lane.runner.initializing)) lane.runner.stop();
     lane.simulationView?.pause();
     $(`#${language}-pane`).hidden = language !== file.language;
   }
@@ -221,15 +222,23 @@ for (const language of languages) {
   const lane = lanes[language] = { editor, view: 'circuit', result: null, builtCode: null, busy: false, intelligenceReady: false };
   lane.circuitPreview = createCircuitPreview($(`#${language}-circuit`));
   lane.simulationView = createSimulationView($(`#${language}-simulation`));
-  const start = performance.now();
+  let runtimeStarted;
   lane.runner = new Runner(language, state => {
     lane.state = state;
     const label = $(`#${language}-state`);
     label.textContent = { starting: 'Starting runtime…', ready: '● Ready', running: '● Building…', error: 'Setup failed', stopped: 'Runtime reset' }[state];
     label.className = `engine-state ${state}`;
+    if (state === 'starting') runtimeStarted = performance.now();
+    if (state === 'ready' && runtimeStarted !== undefined) {
+      $(`#${language}-startup`).textContent = duration(performance.now() - runtimeStarted);
+      runtimeStarted = undefined;
+    }
     actionButton(language, 'run').disabled = lane.busy || state === 'starting';
   });
-  lane.runtimePromise = lane.runner.initialize().then(() => { $(`#${language}-startup`).textContent = duration(performance.now() - start); }).catch(error => { lane.error = error.message; renderOutput(language); });
+  // A workspace can be read and edited without allocating Python's WASM heap
+  // or a second TypeScript compiler. Start execution only when Run is pressed.
+  $(`#${language}-state`).textContent = 'Ready to run';
+  actionButton(language, 'run').disabled = false;
   editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => run(language));
   editor.onDidChangeModelContent(() => { if (!lane.switching) saveDraft(language); renderOutput(language); });
   $(`#${language}-artifact`).addEventListener('change', () => renderOutput(language));

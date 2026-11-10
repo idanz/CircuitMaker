@@ -2,6 +2,7 @@ import { mkdir, copyFile, readFile, writeFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import tsCompiler from 'typescript';
+import { preparePythonAnalyzer } from './python-analyzer.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const generated = path.join(root, 'src/generated');
@@ -20,10 +21,19 @@ for (const name of ['circuit.py', 'catalog.py']) {
 }
 // Remove an obsolete generated starter left by older local builds.
 await rm(path.join(root, 'public/python/supply.py'), { force: true });
-for (const name of ['pyodide.mjs', 'pyodide.asm.mjs', 'pyodide.asm.wasm', 'python_stdlib.zip', 'pyodide-lock.json']) {
+for (const name of ['pyodide.mjs', 'pyodide.asm.wasm', 'python_stdlib.zip', 'pyodide-lock.json']) {
   await copyFile(path.join(root, 'node_modules/pyodide', name), path.join(root, 'public/vendor/pyodide', name));
 }
-await copyFile(path.join(root, 'node_modules/monaco-pyright-lsp/dist/worker.js'), path.join(root, 'public/vendor/pyright/worker.js'));
+// The maintained Python 3.13 runtime supplies a classic module factory. Wrap it
+// as ESM so the opaque-origin sandbox can import its already-fetched bytes.
+const pythonModule = await readFile(path.join(root, 'node_modules/pyodide/pyodide.asm.js'), 'utf8');
+await writeFile(path.join(root, 'public/vendor/pyodide/pyodide.asm.mjs'), `${pythonModule}\nexport default _createPyodideModule;\n`);
+const analyzer = preparePythonAnalyzer(
+  await readFile(path.join(root, 'node_modules/monaco-pyright-lsp/dist/worker.js'), 'utf8'),
+  await readFile(path.join(root, 'node_modules/monaco-pyright-lsp/assets/typeshed-fallback.zip')),
+);
+await writeFile(path.join(root, 'public/vendor/pyright/worker.js'), analyzer.worker);
+console.log(`Prepared Python analyzer with ${analyzer.files} standard-library declaration files, without the ZIP filesystem.`);
 await copyFile(path.join(root, 'node_modules/@astral-sh/ruff-wasm-web/LICENSE'), path.join(root, 'public/vendor/ruff/LICENSE.txt'));
 
 // Derive both the TypeScript catalog and Python analysis declarations from the

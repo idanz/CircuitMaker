@@ -31,7 +31,7 @@ test('asset preparation ignores neighboring CLI files and removes retired genera
     for (const directory of ['scripts', 'source-python', 'src']) {
       await cp(path.join(root, directory), path.join(checkout, directory), { recursive: true });
     }
-    for (const asset of ['pyodide', 'monaco-pyright-lsp/dist/worker.js', '@astral-sh/ruff-wasm-web/LICENSE']) {
+    for (const asset of ['pyodide', 'monaco-pyright-lsp/dist/worker.js', 'monaco-pyright-lsp/assets/typeshed-fallback.zip', '@astral-sh/ruff-wasm-web/LICENSE']) {
       const destination = path.join(checkout, 'node_modules', asset);
       await mkdir(path.dirname(destination), { recursive: true });
       await cp(path.join(root, 'node_modules', asset), destination, { recursive: true, dereference: true });

@@ -9,12 +9,14 @@ export class PythonClient {
     this.worker.onmessage = ({ data }) => this.receive(data);
     this.worker.onerror = event => {
       this.bootError(new Error(event.message || 'Python analysis worker failed'));
+      this.initializationError?.(new Error(event.message || 'Python analysis worker failed'));
       for (const { reject, timer } of this.pending.values()) { clearTimeout(timer); reject(new Error('Python analysis worker failed')); }
       this.pending.clear();
     };
     this.connection = { sendNotification: (method, params) => this.notify(method, params) };
   }
   receive(data) {
+    if (data.type === 'serverError') { this.initializationError?.(new Error(data.message)); return; }
     if (data.type === 'serverLoaded') { this.loaded(); return; }
     if (data.type === 'serverInitialized') { this.initialized?.(); return; }
     if (data.id !== undefined && !data.method) {
@@ -38,7 +40,12 @@ export class PythonClient {
   notify(method, params) { this.worker.postMessage({ jsonrpc: '2.0', method, params }); return Promise.resolve(); }
   async initialize(root, userFiles) {
     await this.serverLoaded;
-    await new Promise(resolve => { this.initialized = resolve; this.worker.postMessage({ type: 'initServer', userFiles }); });
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => { this.worker.terminate(); reject(new Error('Python analysis setup timed out')); }, 30_000);
+      this.initialized = () => { clearTimeout(timer); resolve(); };
+      this.initializationError = error => { clearTimeout(timer); this.worker.terminate(); reject(error); };
+      this.worker.postMessage({ type: 'initServer', userFiles });
+    });
     await this.request('initialize', { rootUri: 'file:///', rootPath: '/', processId: null, capabilities: { textDocument: {
       hover: { contentFormat: ['markdown', 'plaintext'] },
       completion: { completionItem: { documentationFormat: ['markdown', 'plaintext'], resolveSupport: { properties: ['documentation', 'detail'] } } },

@@ -4,7 +4,9 @@ import typescriptWorkerURL from './typescript-worker.ts?worker&url';
 async function fetchChecked(url, binary = false) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Could not load ${url} (${response.status})`);
-  return binary ? response.arrayBuffer() : response.text();
+  // Blobs are immutable and share their backing bytes across postMessage hops.
+  // ArrayBuffers would be copied into both the frame and the runtime worker.
+  return binary ? response.blob() : response.text();
 }
 let pythonAssets;
 let typescriptAssets;
@@ -17,7 +19,7 @@ async function assetsFor(language) {
       fetchChecked('/vendor/pyodide/pyodide-lock.json'), fetchChecked('/python/circuit.py'), fetchChecked('/python/catalog.py'),
     ]);
     return { workerSource, assets: { loader, asm, lockfile: lock, circuit, catalog, runtime: { 'pyodide.asm.wasm': wasm, 'python_stdlib.zip': stdlib } } };
-  })();
+  })().finally(() => { pythonAssets = undefined; });
 }
 
 export class Runner {

@@ -7,8 +7,8 @@ export async function workerBundle(language) {
   const files = await readdir(path.join(root, 'dist/assets'));
   return path.join(root, 'dist/assets', files.find(f => f.startsWith(`${language}-worker-`) && f.endsWith('.js')));
 }
-export function makeWorker(filename, assets = {}) {
-  const worker = new Worker(new URL('./execution-thread.mjs', import.meta.url), { workerData: { filename, assets }, execArgv: ['--experimental-vm-modules'] });
+export function makeWorker(filename, assets = {}, options = {}) {
+  const worker = new Worker(new URL('./execution-thread.mjs', import.meta.url), { workerData: { filename, assets, ...options }, execArgv: ['--experimental-vm-modules'] });
   const messages = [], waiters = [];
   worker.on('message', data => {
     if (data.type === 'harness-error') { for (const w of waiters.splice(0)) { clearTimeout(w.timer); w.reject(new Error(data.message)); } return; }

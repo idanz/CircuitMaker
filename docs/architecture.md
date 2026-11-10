@@ -8,6 +8,8 @@
 
 `src/circuit.ts` provides the matching TypeScript API. Both languages use the shared simulation engine. Tests compare decoded artifacts against the native Python reference.
 
+Python execution uses Python 3.13 (Pyodide 0.29.5). The Python 3.14 build hit a null function-table entry on Safari/iOS 18.3; the maintained 3.13 build passed real-device checks on iPhone 13/iOS 18.3 and iPhone 16 Pro/iOS 18.6.
+
 `Blueprint.entities` contains declared combinators. `Blueprint.deciders` remains a compatibility view of deciders only; Python also accepts the legacy `deciders=` constructor argument.
 
 ## Language services and formatting
@@ -15,6 +17,8 @@
 The editor pins Monaco 0.52.2 and `monaco-pyright-lsp` 0.1.7, which bundles Pyright 1.1.386. The browser Pyright integration is a prototype dependency; upgrades need compatibility checks.
 
 Python analysis loads source modules alongside their declarations. Pyright and Monaco's TypeScript service supply syntax, import, and type diagnostics.
+
+`scripts/python-analyzer.mjs` adapts the pinned analyzer to keep the complete standard-library declarations in a plain in-memory filesystem, without the upstream ZIP mount or unused third-party package stubs. It also disables ZenFS's 4 GiB resizable-buffer reservations for small files, which exhausted browser address space. Isolated Windows Node worker measurements showed analyzer startup increasing process RSS by about 2,187 MiB before these changes and 175–178 MiB afterward; these are not iPhone memory measurements. The analyzer regression test rejects oversized resizable-buffer reservations while exercising real completion, hover, signature help, and type checking.
 
 Python formatting uses `@astral-sh/ruff-wasm-web` 0.17.3 with Python 3.10 syntax, 88-character lines, four-space indentation, and double quotes. A separate worker formats without executing source. Monaco applies edits as one undoable action and discards stale responses if the document changes. TypeScript uses Monaco's formatter.
 
@@ -37,6 +41,8 @@ Game graphics belong to Wube Software. Review asset terms separately from projec
 ## Execution isolation
 
 Each runtime uses a classic worker inside an opaque-origin iframe with `sandbox="allow-scripts"`. The iframe's CSP permits its inline bridge and blob code while denying network connections, forms, and other content.
+
+Execution starts only when Run is pressed. Switching languages releases the inactive execution worker. Immutable Blobs share startup bytes across sandbox message hops, and the Python worker releases the supplied bytes after initialization instead of retaining duplicate buffers.
 
 The parent fetches runtime bytes and delivers them over a MessagePort. Pyodide resolves WASM and standard-library requests against supplied in-memory assets. Runtimes receive no application credentials, local filesystem mount, or parent-window reference.
 
